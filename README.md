@@ -98,19 +98,21 @@ Published image:
 
 - `ghcr.io/<your-github-owner>/car-maintenance`
 
-Set this GitHub Actions repository variable before building:
+No app URL variable is required just to build the image.
 
-- `VITE_API_BASE_URL`
+The frontend uses relative `/api` requests, so the same image can work in different environments without rebuilding it.
 
-The frontend no longer relies on a hard-coded `localhost` API URL. By default it expects the API to be available at a relative path.
+If you want to store the public deployment URL in GitHub for later deployment automation, use a repository variable like:
 
-If your deployment serves the frontend and API from the same host, this should usually be:
+- `APP_BASE_URL`
+
+Example:
 
 ```text
-/api
+https://car-maintenance.yourdomain.com
 ```
 
-If your deployment serves the API from a different domain, set `VITE_API_BASE_URL` to that full public URL during the image build.
+That value is for your deployment process and environment configuration, not for the image build itself.
 
 ## Notes
 
