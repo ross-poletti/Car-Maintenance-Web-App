@@ -8,8 +8,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  API_IMAGE_NAME: ${{ github.repository_owner }}/car-maintenance-api
-  WEB_IMAGE_NAME: ${{ github.repository_owner }}/car-maintenance-web
+  IMAGE_NAME: ${{ github.repository_owner }}/car-maintenance
 
 jobs:
   test-and-build:
@@ -49,40 +48,22 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract API metadata
-        id: api-meta
+      - name: Extract image metadata
+        id: image-meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.API_IMAGE_NAME }}
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=sha
             type=raw,value=latest,enable={{is_default_branch}}
 
-      - name: Extract web metadata
-        id: web-meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.WEB_IMAGE_NAME }}
-          tags: |
-            type=sha
-            type=raw,value=latest,enable={{is_default_branch}}
-
-      - name: Build and push API image
+      - name: Build and push image
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ./server/Dockerfile
-          push: true
-          tags: ${{ steps.api-meta.outputs.tags }}
-          labels: ${{ steps.api-meta.outputs.labels }}
-
-      - name: Build and push web image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: ./client/Dockerfile
+          file: ./Dockerfile
           build-args: |
             VITE_API_BASE_URL=${{ vars.VITE_API_BASE_URL || '/api' }}
           push: true
-          tags: ${{ steps.web-meta.outputs.tags }}
-          labels: ${{ steps.web-meta.outputs.labels }}
+          tags: ${{ steps.image-meta.outputs.tags }}
+          labels: ${{ steps.image-meta.outputs.labels }}

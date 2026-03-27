@@ -2,8 +2,8 @@
 
 This project is a dockerized vehicle maintenance tracker with:
 
-- A `Node.js` API that reads a live Google Sheet published as CSV
-- A `React` frontend for selecting a vehicle and maintenance type
+- A `Node.js` server that reads a live Google Sheet published as CSV
+- A `React` frontend served by that same Node container
 - Automatic calculation of the last performed service and next due date or mileage
 
 ## Google Sheet Format
@@ -52,15 +52,21 @@ If you select `2018 Toyota Tacoma` and `Oil Change`, the app will show:
 
 1. Copy `.env.example` to `.env`
 2. Fill in your Google Sheet values
-3. Start the app:
+3. Build the image:
 
 ```bash
-docker compose up --build
+docker build -t car-maintenance .
+```
+
+4. Run the container:
+
+```bash
+docker run --env-file .env -p 4000:4000 car-maintenance
 ```
 
 Then open:
 
-- Frontend: `http://localhost:3000`
+- Frontend: `http://localhost:4000`
 - API: `http://localhost:4000/api/maintenance`
 
 ## Local Development
@@ -86,12 +92,11 @@ It will:
 - install dependencies with `npm ci`
 - run the backend tests
 - build the React frontend
-- build and push Docker images to `ghcr.io`
+- build and push a Docker image to `ghcr.io`
 
-Published images:
+Published image:
 
-- `ghcr.io/<your-github-owner>/car-maintenance-api`
-- `ghcr.io/<your-github-owner>/car-maintenance-web`
+- `ghcr.io/<your-github-owner>/car-maintenance`
 
 Set this GitHub Actions repository variable before building:
 
