@@ -1,0 +1,10 @@
+Vehicle,Service Type,Service Date,Mileage,Interval Miles,Interval Days,Notes
+2018 Toyota Tacoma,Oil Change,2026-01-15,45210,5000,180,Full synthetic oil and OEM filter
+2018 Toyota Tacoma,Tire Rotation,2026-02-10,45980,6000,180,Rotated all four tires
+2018 Toyota Tacoma,Cabin Air Filter,2025-11-20,43050,15000,365,Replaced cabin filter
+2020 Honda CR-V,Oil Change,2026-03-01,38220,5000,180,Synthetic blend oil
+2020 Honda CR-V,Brake Fluid,2025-09-05,34100,,730,Full brake fluid flush
+2020 Honda CR-V,Engine Air Filter,2025-12-18,36040,15000,365,Installed new air filter
+2016 Ford F-150,Oil Change,2026-02-22,88810,5000,180,Changed oil and inspected belts
+2016 Ford F-150,Transmission Service,2025-08-14,81200,30000,730,Transmission fluid service
+2016 Ford F-150,Coolant Flush,2024-10-01,76000,,1460,Cooling system flush completed
