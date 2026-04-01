@@ -3,7 +3,7 @@ name: Build And Publish
 on:
   push:
     branches:
-      - dev
+      - staging
       - main
   workflow_dispatch:
 
@@ -53,7 +53,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=staging,enable=${{ github.ref_name == 'dev' }}
+            type=raw,value=staging,enable=${{ github.ref_name == 'staging' }}
             type=raw,value=latest,enable=${{ github.ref_name == 'main' }}
 
       - name: Build and push image
