@@ -53,10 +53,8 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=staging-{{sha}},enable=${{ github.ref_name == 'dev' }}
             type=raw,value=staging,enable=${{ github.ref_name == 'dev' }}
-            type=raw,value=prod-{{sha}},enable=${{ github.ref_name == 'main' }}
-            type=raw,value=prod,enable=${{ github.ref_name == 'main' }}
+            type=raw,value=latest,enable=${{ github.ref_name == 'main' }}
 
       - name: Build and push image
         uses: docker/build-push-action@v6
