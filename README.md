@@ -119,4 +119,4 @@ That value is for your deployment process and environment configuration, not for
 - If you already have a direct CSV export URL, you can set `SHEET_CSV_URL` instead of `GOOGLE_SHEET_ID`.
 - The backend caches sheet results for `CACHE_TTL_MINUTES` to avoid refetching on every request.
 - If you want to test without Google Sheets first, point `SHEET_CSV_URL` at any publicly accessible CSV with the same columns.
-Test for staging vs prod.
+Test for staging vs production
