@@ -82,7 +82,7 @@ export default function App() {
     <main className="app-shell">
       <section className="hero-panel">
         <div className="eyebrow">car-maintenance</div>
-        <h1>Know what was done, and what comes next.</h1>
+        <h1>Poletti's Car Maintenance Log</h1>
         <p>
           Connect a live Google Sheet, pick a vehicle, choose a maintenance item, and instantly see
           the last service date, mileage, and the next due target.
@@ -182,5 +182,3 @@ export default function App() {
     </main>
   );
 }
-
-
