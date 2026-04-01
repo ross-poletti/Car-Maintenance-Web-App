@@ -174,7 +174,7 @@ export default function App() {
             </div>
             <div>
               <span>Sheet Refresh</span>
-              <strong>{new Date(data.refreshedAt).toLocaleString()}</strong>
+              <strong>{new Date(data.refreshedAt).toLocaleString([], { weekday: "long", year: "numeric", month: "long", day: "numeric", hour: "numeric", minute: "2-digit" })}</strong>
             </div>
           </div>
         ) : null}
