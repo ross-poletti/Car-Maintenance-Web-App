@@ -84,7 +84,7 @@ export default function App() {
         <div className="eyebrow">car-maintenance</div>
         <h1>Poletti's Car Maintenance Log</h1>
         <p>
-          Connect a live Google Sheet, pick a vehicle, choose a maintenance item, and instantly see
+          Connect live Google Sheets, pick a vehicle, choose a maintenance item, and instantly see
           the last service date, mileage, and the next due target.
         </p>
       </section>

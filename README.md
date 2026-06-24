@@ -2,13 +2,28 @@
 
 This project is a dockerized vehicle maintenance tracker with:
 
-- A `Node.js` server that reads a live Google Sheet published as CSV
+- A `Node.js` server that reads one or more live Google Sheets published as CSV
 - A `React` frontend served by that same Node container
 - Automatic calculation of the last performed service and next due date or mileage
 
 ## Google Sheet Format
 
-Publish your Google Sheet so it can be read as CSV, then make sure the sheet includes these columns:
+Publish each Google Sheet so it can be read as CSV.
+
+For the recommended one-sheet-per-vehicle setup, each vehicle sheet should include these columns:
+
+| Column | Required | Example |
+| --- | --- | --- |
+| `Service Type` | Yes | `Oil Change` |
+| `Service Date` | Yes | `2026-03-01` |
+| `Mileage` | Yes | `45210` |
+| `Interval Miles` | No | `5000` |
+| `Interval Days` | No | `180` |
+| `Notes` | No | `Full synthetic` |
+
+The vehicle name comes from `VEHICLE_SHEETS` in your `.env` file.
+
+If you prefer the legacy shared-sheet setup, include a `Vehicle` column too:
 
 | Column | Required | Example |
 | --- | --- | --- |
@@ -22,9 +37,25 @@ Publish your Google Sheet so it can be read as CSV, then make sure the sheet inc
 
 The app uses the most recent matching record for each `Vehicle + Service Type` pair.
 
+## Multiple Vehicle Sheets
+
+Set `VEHICLE_SHEETS` to a JSON array. Each entry needs a `vehicle` name and either a `sheetId` with optional `gid`, or a direct `csvUrl`.
+
+```env
+VEHICLE_SHEETS=[{"vehicle":"2018 Toyota Tacoma","sheetId":"SHEETID1","gid":"0"},{"vehicle":"2020 Honda CR-V","sheetId":"SHEETID2","gid":"0"}]
+```
+
+Direct CSV URLs work too:
+
+```env
+VEHICLE_SHEETS=[{"vehicle":"2018 Toyota Tacoma","csvUrl":"https://example.com/tacoma.csv"},{"vehicle":"2020 Honda CR-V","csvUrl":"https://example.com/crv.csv"}]
+```
+
+When `VEHICLE_SHEETS` is set, the app ignores `GOOGLE_SHEET_ID`, `GOOGLE_SHEET_GID`, and `SHEET_CSV_URL`.
+
 ## Example Sheet Data
 
-You can use the sample file at [`examples/sample-maintenance-log.csv`](d:/Coding%20Projects%20/Car%20Maintenance%20Web%20App/examples/sample-maintenance-log.csv) to create your Google Sheet.
+You can use the sample file at [`examples/sample-maintenance-log.csv`](examples/sample-maintenance-log.csv) to create a shared Google Sheet.
 
 Example rows:
 
@@ -43,10 +74,10 @@ If you select `2018 Toyota Tacoma` and `Oil Change`, the app will show:
 ## Quick Google Sheets Setup
 
 1. Create a new Google Sheet.
-2. Import [`examples/sample-maintenance-log.csv`](d:/Coding%20Projects%20/Car%20Maintenance%20Web%20App/examples/sample-maintenance-log.csv).
+2. Import [`examples/sample-maintenance-log.csv`](examples/sample-maintenance-log.csv), or create one sheet per vehicle using the same columns without `Vehicle`.
 3. In Google Sheets, use `File > Share > Publish to web`.
 4. Publish the sheet as CSV.
-5. Put the sheet ID into `.env` as `GOOGLE_SHEET_ID`.
+5. Put the sheet IDs or CSV URLs into `.env` as `VEHICLE_SHEETS`.
 
 ## Run With Docker
 
@@ -116,6 +147,6 @@ That value is for your deployment process and environment configuration, not for
 
 ## Notes
 
-- If you already have a direct CSV export URL, you can set `SHEET_CSV_URL` instead of `GOOGLE_SHEET_ID`.
+- If you want one shared sheet instead, set `GOOGLE_SHEET_ID` or `SHEET_CSV_URL` and include the `Vehicle` column.
 - The backend caches sheet results for `CACHE_TTL_MINUTES` to avoid refetching on every request.
 - If you want to test without Google Sheets first, point `SHEET_CSV_URL` at any publicly accessible CSV with the same columns.

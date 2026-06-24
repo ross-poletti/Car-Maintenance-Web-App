@@ -1,5 +1,4 @@
 const REQUIRED_COLUMNS = [
-  "vehicle",
   "serviceType",
   "serviceDate",
   "mileage"
@@ -12,7 +11,48 @@ let cache = {
   payload: null
 };
 
-function buildSheetUrl() {
+function buildGoogleSheetUrl(sheetId, gid = "0") {
+  return `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
+}
+
+function parseVehicleSheetsConfig() {
+  if (!process.env.VEHICLE_SHEETS) {
+    return [];
+  }
+
+  let entries;
+  try {
+    entries = JSON.parse(process.env.VEHICLE_SHEETS);
+  } catch {
+    throw new Error("VEHICLE_SHEETS must be valid JSON.");
+  }
+
+  if (!Array.isArray(entries) || entries.length === 0) {
+    throw new Error("VEHICLE_SHEETS must be a non-empty JSON array.");
+  }
+
+  return entries.map((entry, index) => {
+    const vehicle = String(entry.vehicle || "").trim();
+    const csvUrl = String(entry.csvUrl || "").trim();
+    const sheetId = String(entry.sheetId || "").trim();
+    const gid = String(entry.gid || "0").trim();
+
+    if (!vehicle) {
+      throw new Error(`VEHICLE_SHEETS entry ${index + 1} is missing a vehicle name.`);
+    }
+
+    if (!csvUrl && !sheetId) {
+      throw new Error(`VEHICLE_SHEETS entry ${index + 1} for ${vehicle} is missing csvUrl or sheetId.`);
+    }
+
+    return {
+      vehicle,
+      url: csvUrl || buildGoogleSheetUrl(sheetId, gid)
+    };
+  });
+}
+
+function buildSharedSheetUrl() {
   if (process.env.SHEET_CSV_URL) {
     return process.env.SHEET_CSV_URL;
   }
@@ -24,7 +64,26 @@ function buildSheetUrl() {
     throw new Error("Missing GOOGLE_SHEET_ID or SHEET_CSV_URL environment variable.");
   }
 
-  return `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
+  return buildGoogleSheetUrl(sheetId, gid);
+}
+
+function getSheetSources() {
+  const vehicleSheets = parseVehicleSheetsConfig();
+
+  if (vehicleSheets.length > 0) {
+    return vehicleSheets.map((source) => ({
+      ...source,
+      requiresVehicleColumn: false
+    }));
+  }
+
+  return [
+    {
+      vehicle: null,
+      url: buildSharedSheetUrl(),
+      requiresVehicleColumn: true
+    }
+  ];
 }
 
 function parseCsv(csvText) {
@@ -83,7 +142,7 @@ function normalizeHeader(value) {
   return value.trim().replace(/\s+/g, "").replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
 }
 
-function mapRows(rows) {
+function mapRows(rows, defaultVehicle = null, requiresVehicleColumn = true) {
   if (rows.length === 0) {
     return [];
   }
@@ -97,13 +156,14 @@ function mapRows(rows) {
     return record;
   });
 
-  const missing = REQUIRED_COLUMNS.filter((key) => !headers.includes(normalizeHeader(key)));
+  const requiredColumns = requiresVehicleColumn ? ["vehicle", ...REQUIRED_COLUMNS] : REQUIRED_COLUMNS;
+  const missing = requiredColumns.filter((key) => !headers.includes(normalizeHeader(key)));
   if (missing.length > 0) {
     throw new Error(`Google Sheet is missing required columns: ${missing.join(", ")}`);
   }
 
   return records.map((record) => ({
-    vehicle: record.vehicle,
+    vehicle: defaultVehicle || record.vehicle,
     serviceType: record.servicetype,
     serviceDate: parseDate(record.servicedate),
     serviceDateLabel: record.servicedate,
@@ -128,7 +188,12 @@ function parseDate(value) {
     return null;
   }
 
-  const date = new Date(value);
+  const trimmed = String(value).trim();
+  const dateOnlyMatch = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  const date = dateOnlyMatch
+    ? new Date(Number(dateOnlyMatch[1]), Number(dateOnlyMatch[2]) - 1, Number(dateOnlyMatch[3]))
+    : new Date(trimmed);
+
   if (Number.isNaN(date.getTime())) {
     return null;
   }
@@ -166,7 +231,7 @@ function compareRecords(a, b) {
   return (b.mileage || 0) - (a.mileage || 0);
 }
 
-function summarizeRecords(records) {
+function summarizeRecords(records, sheetSources = null) {
   const vehicleMap = new Map();
   const serviceMap = new Map();
 
@@ -216,7 +281,8 @@ function summarizeRecords(records) {
   }).sort((a, b) => a.vehicle.localeCompare(b.vehicle) || a.serviceType.localeCompare(b.serviceType));
 
   return {
-    sheetUrl: buildSheetUrl(),
+    sheetUrl: sheetSources?.length === 1 ? sheetSources[0].url : null,
+    sheetUrls: sheetSources?.map(({ vehicle, url }) => ({ vehicle, url })) || [],
     refreshedAt: new Date().toISOString(),
     vehicles,
     services
@@ -228,20 +294,25 @@ export async function getMaintenanceData() {
     return cache.payload;
   }
 
-  const response = await fetch(buildSheetUrl(), {
-    headers: {
-      "User-Agent": "car-maintenance-web-app"
+  const sheetSources = getSheetSources();
+  const recordGroups = await Promise.all(sheetSources.map(async (source) => {
+    const response = await fetch(source.url, {
+      headers: {
+        "User-Agent": "car-maintenance-web-app"
+      }
+    });
+
+    if (!response.ok) {
+      const label = source.vehicle || "shared maintenance sheet";
+      throw new Error(`Unable to fetch ${label}. Received status ${response.status}.`);
     }
-  });
 
-  if (!response.ok) {
-    throw new Error(`Unable to fetch Google Sheet. Received status ${response.status}.`);
-  }
+    const csvText = await response.text();
+    const rows = parseCsv(csvText);
+    return mapRows(rows, source.vehicle, source.requiresVehicleColumn);
+  }));
 
-  const csvText = await response.text();
-  const rows = parseCsv(csvText);
-  const records = mapRows(rows);
-  const payload = summarizeRecords(records);
+  const payload = summarizeRecords(recordGroups.flat(), sheetSources);
 
   cache = {
     payload,
@@ -254,6 +325,8 @@ export async function getMaintenanceData() {
 export function __internal__() {
   return {
     parseCsv,
+    parseVehicleSheetsConfig,
+    getSheetSources,
     mapRows,
     summarizeRecords,
     formatDate
