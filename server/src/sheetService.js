@@ -86,6 +86,10 @@ function getSheetSources() {
   ];
 }
 
+function describeSource(source) {
+  return source.vehicle || "shared maintenance sheet";
+}
+
 function parseCsv(csvText) {
   const rows = [];
   let current = "";
@@ -296,15 +300,20 @@ export async function getMaintenanceData() {
 
   const sheetSources = getSheetSources();
   const recordGroups = await Promise.all(sheetSources.map(async (source) => {
-    const response = await fetch(source.url, {
-      headers: {
-        "User-Agent": "car-maintenance-web-app"
-      }
-    });
+    let response;
+    try {
+      response = await fetch(source.url, {
+        headers: {
+          "User-Agent": "car-maintenance-web-app"
+        }
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "fetch failed";
+      throw new Error(`Unable to fetch ${describeSource(source)} from its configured sheet URL: ${message}`);
+    }
 
     if (!response.ok) {
-      const label = source.vehicle || "shared maintenance sheet";
-      throw new Error(`Unable to fetch ${label}. Received status ${response.status}.`);
+      throw new Error(`Unable to fetch ${describeSource(source)}. Received status ${response.status}.`);
     }
 
     const csvText = await response.text();

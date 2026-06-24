@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { __internal__ } from "./sheetService.js";
+import { __internal__, getMaintenanceData } from "./sheetService.js";
 
 const { parseCsv, parseVehicleSheetsConfig, mapRows, summarizeRecords } = __internal__();
 process.env.SHEET_CSV_URL = 'https://example.com/maintenance.csv';
@@ -73,4 +73,27 @@ test("summarizeRecords keeps the latest service and computes due values", () => 
   assert.equal(service.lastPerformed.mileage, 17000);
   assert.equal(service.nextDue.mileage, 22000);
   assert.ok(service.nextDue.date);
+});
+
+test("getMaintenanceData labels network fetch failures", async () => {
+  const originalConfig = process.env.VEHICLE_SHEETS;
+  const originalFetch = globalThis.fetch;
+  process.env.VEHICLE_SHEETS = JSON.stringify([
+    { vehicle: "Tacoma", csvUrl: "https://example.com/tacoma.csv" }
+  ]);
+  globalThis.fetch = async () => {
+    throw new Error("fetch failed");
+  };
+
+  await assert.rejects(
+    () => getMaintenanceData(),
+    /Unable to fetch Tacoma from its configured sheet URL: fetch failed/
+  );
+
+  globalThis.fetch = originalFetch;
+  if (originalConfig === undefined) {
+    delete process.env.VEHICLE_SHEETS;
+  } else {
+    process.env.VEHICLE_SHEETS = originalConfig;
+  }
 });
