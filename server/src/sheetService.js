@@ -90,6 +90,15 @@ function describeSource(source) {
   return source.vehicle || "shared maintenance sheet";
 }
 
+function describeFetchError(error) {
+  if (!(error instanceof Error)) {
+    return "fetch failed";
+  }
+
+  const cause = error.cause instanceof Error ? ` (${error.cause.message})` : "";
+  return `${error.message}${cause}`;
+}
+
 function parseCsv(csvText) {
   const rows = [];
   let current = "";
@@ -302,13 +311,9 @@ export async function getMaintenanceData() {
   const recordGroups = await Promise.all(sheetSources.map(async (source) => {
     let response;
     try {
-      response = await fetch(source.url, {
-        headers: {
-          "User-Agent": "car-maintenance-web-app"
-        }
-      });
+      response = await fetch(source.url);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "fetch failed";
+      const message = describeFetchError(error);
       throw new Error(`Unable to fetch ${describeSource(source)} from its configured sheet URL: ${message}`);
     }
 
