@@ -6,6 +6,26 @@ function formatMileage(mileage) {
   return typeof mileage === "number" ? `${mileage.toLocaleString()} mi` : "Not set";
 }
 
+function formatTimestamp(timestamp) {
+  if (!timestamp) {
+    return "Unknown";
+  }
+
+  const date = new Date(timestamp);
+  if (Number.isNaN(date.getTime())) {
+    return "Unknown";
+  }
+
+  return date.toLocaleString([], {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit"
+  });
+}
+
 function DetailCard({ label, value, accent }) {
   return (
     <div className={`detail-card ${accent ? "accent" : ""}`}>
@@ -173,8 +193,8 @@ export default function App() {
               <strong>{selectedRecord.notes || "No notes on this service entry."}</strong>
             </div>
             <div>
-              <span>Sheet Refresh</span>
-              <strong>{new Date(data.refreshedAt).toLocaleString([], { weekday: "long", year: "numeric", month: "long", day: "numeric", hour: "numeric", minute: "2-digit" })}</strong>
+              <span>Sheet Cached</span>
+              <strong>{formatTimestamp(data.cachedAt || data.refreshedAt)}</strong>
             </div>
           </div>
         ) : null}

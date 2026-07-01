@@ -247,6 +247,7 @@ function compareRecords(a, b) {
 function summarizeRecords(records, sheetSources = null) {
   const vehicleMap = new Map();
   const serviceMap = new Map();
+  const cachedAt = new Date().toISOString();
 
   for (const record of records) {
     if (!vehicleMap.has(record.vehicle)) {
@@ -296,7 +297,8 @@ function summarizeRecords(records, sheetSources = null) {
   return {
     sheetUrl: sheetSources?.length === 1 ? sheetSources[0].url : null,
     sheetUrls: sheetSources?.map(({ vehicle, url }) => ({ vehicle, url })) || [],
-    refreshedAt: new Date().toISOString(),
+    cachedAt,
+    refreshedAt: cachedAt,
     vehicles,
     services
   };

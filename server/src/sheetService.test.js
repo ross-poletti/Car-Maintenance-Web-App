@@ -73,6 +73,8 @@ test("summarizeRecords keeps the latest service and computes due values", () => 
   assert.equal(service.lastPerformed.mileage, 17000);
   assert.equal(service.nextDue.mileage, 22000);
   assert.ok(service.nextDue.date);
+  assert.ok(summary.cachedAt);
+  assert.equal(summary.refreshedAt, summary.cachedAt);
 });
 
 test("getMaintenanceData labels network fetch failures", async () => {
