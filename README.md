@@ -180,8 +180,8 @@ Two equivalent pipelines run on pushes to `staging` or `main`:
 - [`.github/workflows/build.yaml`](.github/workflows/build.yaml) — GitHub Actions, pushes to
   GHCR (`ghcr.io/<owner>/car-maintenance`).
 - [`.gitea/workflows/build.yaml`](.gitea/workflows/build.yaml) — Gitea Actions, pushes to the
-  Gitea instance's own container registry (`git.polettis.com/ross-poletti/car-maintenance`) using
-  the built-in Actions token, so no extra registry secret is needed.
+  Gitea instance's own container registry (`git.polettis.com/rpoletti/car-maintenance`) using a
+  personal access token stored as the `PACKAGE_TOKEN` secret.
 
 Both run the same steps:
 

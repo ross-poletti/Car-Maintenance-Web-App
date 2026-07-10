@@ -9,7 +9,7 @@ on:
 
 env:
   REGISTRY: git.polettis.com
-  IMAGE_NAME: ross-poletti/car-maintenance
+  IMAGE_NAME: rpoletti/car-maintenance
 
 jobs:
   test-and-build:
