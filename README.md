@@ -175,14 +175,20 @@ without rebuilding.
 
 ## CI/CD
 
-Both [`.github/workflows/build.yaml`](.github/workflows/build.yaml) (GitHub Actions) and
-[`.gitea/workflows/build.yaml`](.gitea/workflows/build.yaml) (Gitea Actions) run the same pipeline
-on pushes to `staging` or `main`:
+Two equivalent pipelines run on pushes to `staging` or `main`:
+
+- [`.github/workflows/build.yaml`](.github/workflows/build.yaml) — GitHub Actions, pushes to
+  GHCR (`ghcr.io/<owner>/car-maintenance`).
+- [`.gitea/workflows/build.yaml`](.gitea/workflows/build.yaml) — Gitea Actions, pushes to the
+  Gitea instance's own container registry (`git.polettis.com/ross-poletti/car-maintenance`) using
+  the built-in Actions token, so no extra registry secret is needed.
+
+Both run the same steps:
 
 1. `npm ci`
 2. Run backend tests (`npm test -w server`)
 3. Build the React frontend (`npm run build -w client`)
-4. Build and push a Docker image to GHCR, tagged `staging` or `latest` to match the branch
+4. Build and push a Docker image, tagged `staging` or `latest` to match the branch
 
 No app URL needs to be known at build time — the frontend only ever calls a relative `/api` path.
 If you want to record a deployment URL for your own automation, a repo variable like `APP_BASE_URL`
