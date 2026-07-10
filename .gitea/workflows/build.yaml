@@ -43,7 +43,7 @@ jobs:
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
-          username: ross-poletti
+          username: rpoletti
           password: ${{ secrets.PACKAGE_TOKEN }}
 
       - name: Extract image metadata
