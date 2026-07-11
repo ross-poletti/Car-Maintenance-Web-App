@@ -60,7 +60,16 @@ export default function App() {
         }
 
         setData(payload);
-        setSelectedVehicle((current) => current || payload.vehicles[0]?.name || "");
+        setSelectedVehicle((current) => {
+          const nextVehicle = current || payload.vehicles[0]?.name || "";
+          const nextServices = payload.vehicles.find((entry) => entry.name === nextVehicle)?.serviceTypes || [];
+
+          setSelectedService((currentService) =>
+            nextServices.includes(currentService) ? currentService : nextServices[0] || ""
+          );
+
+          return nextVehicle;
+        });
       } catch (loadError) {
         if (active) {
           setError(loadError instanceof Error ? loadError.message : "Unable to load maintenance data.");
