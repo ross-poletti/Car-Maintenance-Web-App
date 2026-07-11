@@ -6,6 +6,26 @@ function formatMileage(mileage) {
   return typeof mileage === "number" ? `${mileage.toLocaleString()} mi` : "Not set";
 }
 
+function formatTimestamp(timestamp) {
+  if (!timestamp) {
+    return "Unknown";
+  }
+
+  const date = new Date(timestamp);
+  if (Number.isNaN(date.getTime())) {
+    return "Unknown";
+  }
+
+  return date.toLocaleString([], {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit"
+  });
+}
+
 function DetailCard({ label, value, accent }) {
   return (
     <div className={`detail-card ${accent ? "accent" : ""}`}>
@@ -40,7 +60,16 @@ export default function App() {
         }
 
         setData(payload);
-        setSelectedVehicle((current) => current || payload.vehicles[0]?.name || "");
+        setSelectedVehicle((current) => {
+          const nextVehicle = current || payload.vehicles[0]?.name || "";
+          const nextServices = payload.vehicles.find((entry) => entry.name === nextVehicle)?.serviceTypes || [];
+
+          setSelectedService((currentService) =>
+            nextServices.includes(currentService) ? currentService : nextServices[0] || ""
+          );
+
+          return nextVehicle;
+        });
       } catch (loadError) {
         if (active) {
           setError(loadError instanceof Error ? loadError.message : "Unable to load maintenance data.");
@@ -82,9 +111,9 @@ export default function App() {
     <main className="app-shell">
       <section className="hero-panel">
         <div className="eyebrow">car-maintenance</div>
-        <h1>Know what was done, and what comes next.</h1>
+        <h1>Poletti's Car Maintenance Log</h1>
         <p>
-          Connect a live Google Sheet, pick a vehicle, choose a maintenance item, and instantly see
+          Connect live Google Sheets, pick a vehicle, choose a maintenance item, and instantly see
           the last service date, mileage, and the next due target.
         </p>
       </section>
@@ -173,8 +202,8 @@ export default function App() {
               <strong>{selectedRecord.notes || "No notes on this service entry."}</strong>
             </div>
             <div>
-              <span>Sheet Refresh</span>
-              <strong>{new Date(data.refreshedAt).toLocaleString()}</strong>
+              <span>Sheet Cached</span>
+              <strong>{formatTimestamp(data.cachedAt || data.refreshedAt)}</strong>
             </div>
           </div>
         ) : null}
@@ -182,5 +211,3 @@ export default function App() {
     </main>
   );
 }
-
-
